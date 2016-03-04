@@ -7,7 +7,7 @@
  * @license http://www.apache.org/licenses/LICENSE-2.0
  * @version 2.1.0 - for same ispAPI version 2.1.0
  * @link  https://general-servers.com
- * @link
+ * @link  https://github.com/General-Servers/Oll.tv
  */
 class OllTv
 {
