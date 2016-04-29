@@ -1,74 +1,80 @@
 <?php
 
 /**
- * Oll.tv API class
- * @author Prakapas Andriy <prakapas@general-servers.com>
- * @copyright 2016 GeneralServers LLC
- * @license http://www.apache.org/licenses/LICENSE-2.0
- * @version 2.1.0 - for same ispAPI version 2.1.0
- * @link  https://general-servers.com
- * @link  https://github.com/General-Servers/Oll.tv
+ * Oll.tv ispAPI class
+ * @author          Prakapas Andriy <prakapas@general-servers.com>
+ * @copyright       2016 GeneralServers LLC
+ * @license         http://www.apache.org/licenses/LICENSE-2.0
+ * @version         2.1.0 - for same ispAPI version 2.1.0
+ * @link            https://general-servers.com
+ * @link            https://github.com/General-Servers/Oll.tv
  */
 class OllTv
 {
+    /* Oll.tv constants */
+    const OTV_URL = 'http://oll.tv/';            // main production url
+    const OTV_URL_DEV = 'http://dev.oll.tv/';    // development url for test
+    const OTV_URL_API = 'ispAPI';                // main api url
+    const OTV_URL_AUTH = 'auth2';                // auth url
 
-    const OTV_URL = 'http://oll.tv/'; // main production url
-    const OTV_URL_DEV = 'http://dev.oll.tv/'; // development url for test
-    const OTV_URL_API = 'ispAPI'; // main api url
-    const OTV_URL_AUTH = 'auth2'; // auth url
+    /* log constants */
+    const ERROR = 1;
+    const WARNING = 2;
+    const INFO = 3;
 
     /**
-     * client login
-     * set in consctruct
+     * Client ispAPI login
+     * Assign in constructor
      * @var string
      */
-    private $login;
+    private $_login;
     /**
-     * client password
-     * set in consctruct
+     * Client ispAPI password
+     * Assign in constructor
      * @var string
      */
-    private $password;
+    private $_password;
     /**
-     * client hash
-     * hash return ispAPi; usign in all requests
+     * ispAPI hash
+     * Hash return ispAPI; using in all requests
      * @var string
      */
-    private $hash;
+    private $_hash;
     /**
-     * result what return api
+     * Result variable
+     * Return ispAPI
      * @var string
      */
-    private $result;
+    private $_result;
     /**
-     * api url
+     * ispAPI url
      * @var string
      */
-    private $url;
+    private $_url;
 
 
     /* log vars */
 
     /**
-     * path to log file
+     * Path to log file
      * @var string
      */
-    private $log;
+    private $_log;
     /**
-     * log level variable
+     * Log level variable
      * 0 - not show any messages
-     * 1 - only Errors : DEFAULT
+     * 1 - only Errors - DEFAULT
      * 2 - Errors, Warnings
-     * 3 - Errors, Warnings and Infos
+     * 3 - Errors, Warnings and Informations
      * @var integer
      */
-    private $logLevel = 1;
+    private $_logLevel = 1;
     /**
-     * log message type\
-     * related with $logLevel var
+     * Log message type
+     * Related with $_logLevel var
      * @var array
      */
-    private $logType = array(
+    private $_logType = array(
         0 => '',
         1 => 'Error',
         2 => 'Warning',
@@ -81,11 +87,12 @@ class OllTv
     /* error vars */
 
     /**
-     * api errors array
+     * ispAPI errors array:
      * key - error status
+     * value has short message and full description
      * @var array
      */
-    private $errors = array(
+    private $_errors = array(
         109 => array(
             'message' => 'Hash expired',
             'description' => 'Время действия хеша истекло или хеш не верен'
@@ -201,42 +208,47 @@ class OllTv
     );
 
     /**
-     * last message array
-     * can get last message by type without log
+     * Last message array
+     * You can get last message by type even when log has disabled
      * @var array
      */
-    private $lastMessage = array(
+    private $_lastMessage = array(
         0 => '', // empty
         1 => '', // last error message
         2 => '', // last warning message
-        3 => '' // last info message
+        3 => ''  // last information message
     );
 
     /* --end error vars */
 
 
     /**
-     * set last message
-     * @param string $message message text
-     * @param integer $type    message type
+     * Assign last message
+     * @param   string   $message  message text
+     * @param   integer  $type     message type
      * @return  boolean
      */
     private function _setLastMessage($message, $type)
     {
         // verify arguments
-        if (!is_string($message) || !is_numeric($type)) return false;
+        if (!is_string($message) || !is_numeric($type)) {
+            return false;
+        }
         // verify type in last message array
-        if (!isset($this->lastMessage[ $type ])) return false;
-        // assign message
-        $this->lastMessage[ $type ] = $message;
+        if (!isset($this->_lastMessage[ $type ])) {
+            return false;
+        }
+
+        // assign message by type
+        $this->_lastMessage[ $type ] = $message;
         return true;
     }
 
     /**
-     * method write to log file
-     * @param  string $message message text
-     * @param  integer $type    type of message
-     * @return boolean
+     * Write to log file
+     * @param   string    $message    message text
+     * @param   integer   $type       type of message
+     * @return  boolean
      */
     private function _toLog($message, $type = 1)
     {
@@ -244,29 +256,31 @@ class OllTv
         if (empty($message) || !is_string($message)) {
             return false;
         }
-        // set last message variable
+        // assign last message variable
         $this->_setLastMessage($message, $type);
 
         // verify log level
-        if ($this->logLevel == 0 || $type == 0 || !isset($this->logType[ $type ])) return false;
-        if ($type > $this->logLevel) {
+        if ($this->_logLevel == 0 || $type == 0 || !isset($this->_logType[ $type ])) {
             return false;
         }
-
-        // verify path to log file and writable file access
-        if (!is_writable($this->log)) {
+        // compare $_logLevel and message type
+        if ($type > $this->_logLevel) {
+            return false;
+        }
+        // verify path to log file and write access
+        if (!is_writable($this->_log)) {
             return false;
         }
 
         // prepare message type
-        $type = $this->logType[ $type ].': ';
+        $type = $this->_logType[ $type ].': ';
         // append write to file and get result
-        $res = file_put_contents($this->log, date('Y-m-d H:i:s').' '.$type.$message."\n", FILE_APPEND | LOCK_EX);
+        $res = file_put_contents($this->_log, date('Y-m-d H:i:s').' '.$type.$message.";\n", FILE_APPEND | LOCK_EX);
         return (bool)$res;
     }
 
     /**
-     * method prepare default account data
+     * Method prepare default account data
      * @param  array $params parametters array
      * accept parametters:
      * account OR email OR id OR ds_account
@@ -280,54 +294,50 @@ class OllTv
      */
     private function _prepareAccountDefaultData($params)
     {
-        //init return array
+        // init return array
         $args = array();
 
-        // try find `account`
+        // try find 'account'
         if (!empty($params['account'])) {
             $args = array(
                 'account' => $params['account']
             );
-        }
-        else {
-            $this->_toLog('['.__FUNCTION__.'] - `account` not found in parametter array;', 3);
+        } else {
+            $this->_toLog('['.__FUNCTION__.'] - `account` not found in parametter array', INFO);
         }
 
-        // try find `email`
+        // try find 'email'
         if (!empty($params['email']) && filter_var($params['email'], FILTER_VALIDATE_EMAIL)) {
             $args = array(
                 'email' => $params['email']
             );
-        }
-        else {
-            $this->_toLog('['.__FUNCTION__.'] - `email` not found in parametter array or `email` is not valid email;', 3);
+        } else {
+            $this->_toLog('['.__FUNCTION__.'] - `email` not found in parametter array or `email` is not valid email', INFO);
         }
 
-        // try find `id`
+        // try find 'id'
         if (!empty($params['id']) && is_numeric($params['id'])) {
             $args = array(
                 'id' => $params['id']
             );
-        }
-        else {
-            $this->_toLog('['.__FUNCTION__.'] - `id` not found in parametter array;', 3);
+        } else {
+            $this->_toLog('['.__FUNCTION__.'] - `id` not found in parametter array', INFO);
         }
 
-        // try find `ds_account`
+        // try find 'ds_account'
         if (!empty($params['ds_account'])) {
             $args = array(
                 'ds_account' => $params['ds_account']
             );
-        }
-        else {
-            $this->_toLog('['.__FUNCTION__.'] - `ds_account` not found in parametter array;', 3);
+        } else {
+            $this->_toLog('['.__FUNCTION__.'] - `ds_account` not found in parametter array', INFO);
         }
 
         return $args;
     }
 
     /**
-     * method prepare purchase type
+     * Method prepare purchase type
      * @param  string $type
      * accept parametters:
      * subs_free_device — new contract - 24 months and equipment for 1 uah
@@ -336,7 +346,7 @@ class OllTv
      * subs_no_device — new contract - no equipment
      * subs_renew — restore the current contract
      *
-     * @return mixed  string type or false
+     * @return string|false
      */
     private function _preparePurchaseType($type)
     {
@@ -352,7 +362,7 @@ class OllTv
     }
 
     /**
-     * method prepare device type
+     * Method prepare device type
      * @param  string $type
      * accept parametters:
      * device_free — new contract - 24 months and equipment for 1 uah
@@ -360,7 +370,7 @@ class OllTv
      * device_rent — new contract - rent equipment
      * device_change — service replace the current equipment
      *
-     * @return mixed   string type or false
+     * @return string|false
      */
     private function _prepareDeviceType($type)
     {
@@ -376,59 +386,60 @@ class OllTv
     }
 
     /**
-     * method read result from API
-     * @param  string $result result string
-     * @return boolean
+     * Read result from ispAPI
+     * @param   string   $result  result string
+     * @return  boolean
      */
     private function _readResult($result)
     {
         // verify result var
         if (empty($result) || !is_string($result)) {
-            $this->_toLog('['.__FUNCTION__.'] - cannot read result; maybe empty or not string value: '.var_export($result, true).';');
+            $this->_toLog('['.__FUNCTION__.'] - cannot read result; maybe empty or not string value: '.var_export($result, true));
             return false;
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - read result: '.var_export($result, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - read result: '.var_export($result, true), INFO);
 
         // decode from string
         $json = json_decode($result);
         // check json errors
         $error = json_last_error_msg();
         if (!$json || strtolower($error) !== 'no error') {
-            $this->_toLog('['.__FUNCTION__.'] - has json error: '.$error.';');
+            $this->_toLog('['.__FUNCTION__.'] - has json error: '.$error);
             return false;
         }
+
         // all looks good
-        $this->result = $json;
+        $this->_result = $json;
         return true;
     }
 
     /**
-     * method return API result
-     * @return mixed object or false
+     * Return ispAPI result
+     * @return object|false
      */
     private function _return()
     {
         // verify result
-        if (empty($this->result) || !is_object($this->result) || !isset($this->result->status)) {
-            $this->_toLog('['.__FUNCTION__.'] - API result is bad type: '.var_export($this->result, true).';');
+        if (empty($this->_result) || !is_object($this->_result) || !isset($this->_result->status)) {
+            $this->_toLog('['.__FUNCTION__.'] - API result is bad type: '.var_export($this->_result, true));
             return false;
         }
 
-        // log warnings if is
-        if (!empty($this->result->warnings)) {
-            $this->_toLog('['.__FUNCTION__.'] - API warnngs: '.(string)$this->result->warnings.';');
+        // log warnings
+        if (!empty($this->_result->warnings)) {
+            $this->_toLog('['.__FUNCTION__.'] - API warnings: '.(string)$this->_result->warnings);
         }
 
         // verify result status
-        if ($this->result->status !== 0) {
+        if ($this->_result->status !== 0) {
             // prepare error
             $error = '';
 
-            if (!isset($this->errors[ $this->result->status ])) {
-                if (isset($this->result->message)) {
-                    $error = $this->result->message;
+            if (!isset($this->_errors[ $this->_result->status ])) {
+                if (isset($this->_result->message)) {
+                    $error = $this->_result->message;
                 }
                 else {
                     $error = '['.__FUNCTION__.'] - API return false status';
@@ -436,92 +447,91 @@ class OllTv
             }
             else {
                 // prepare error string
-                $error = 'Code #'.$this->result->status;
-                $error .= ' '.$this->errors[ $this->result->status ]['message'];
-                $error .= ' - '.$this->errors[ $this->result->status ]['description'];
+                $error = 'Code #'.$this->_result->status;
+                $error .= ' '.$this->_errors[ $this->_result->status ]['message'];
+                $error .= ' - '.$this->_errors[ $this->_result->status ]['description'];
             }
 
             // log error
             $this->_toLog($error);
-            // return flase
+            // return false
             return false;
         }
-        // all looks OK
+        // all looks good
         else {
             // log action
-            $this->_toLog('['.__FUNCTION__.'] - return API result', 3);
+            $this->_toLog('['.__FUNCTION__.'] - return API result', INFO);
             // return result
-            return $this->result;
+            return $this->_result;
         }
     }
 
     /**
-     * method create API url
-     * @param  boolean $testMode testing mode flag
-     * @return boolean
+     * Create ispAPI url
+     * @param   boolean  $testMode  testing mode flag, default - false
+     * @return  boolean
      */
     private function _createUrl($testMode = false)
     {
         // verify argument
         if (!is_bool($testMode)) {
-            $this->_toLog('['.__FUNCTION__.'] - $testMode not is boolean type; set to default `false`;', 2);
+            $this->_toLog('['.__FUNCTION__.'] - $testMode not is boolean type; set to default `false`', WARNING);
             $testMode = false;
         }
 
         // assign url
         if ($testMode) {
-            $this->_toLog('['.__FUNCTION__.'] - $testMode is `true`; set url to: '.self::OTV_URL_DEV, 3);
-            $this->url = self::OTV_URL_DEV;
+            $this->_toLog('['.__FUNCTION__.'] - $testMode is `true`; set url to: '.self::OTV_URL_DEV, INFO);
+            $this->_url = self::OTV_URL_DEV;
         }
         else {
-            $this->_toLog('['.__FUNCTION__.'] - $testMode is `false`; set url to: '.self::OTV_URL, 3);
-            $this->url = self::OTV_URL;
+            $this->_toLog('['.__FUNCTION__.'] - $testMode is `false`; set url to: '.self::OTV_URL, INFO);
+            $this->_url = self::OTV_URL;
         }
-        // add API link to url
-        $this->url .= self::OTV_URL_API;
-
+        // add ispAPI link to url
+        $this->_url .= self::OTV_URL_API;
         return true;
     }
 
     /**
-     * method authenticate to API and set hash
+     * Authenticate to ispAPI and assign hash
      * @return boolean
      */
     private function _auth()
     {
-        // verify login adn pass
-        if (empty($this->login)) {
-            $this->_toLog('['.__FUNCTION__.'] - login is empty;');
+        // verify login and pass
+        if (empty($this->_login)) {
+            $this->_toLog('['.__FUNCTION__.'] - login is empty');
             return false;
         }
-        if (empty($this->password)) {
-            $this->_toLog('['.__FUNCTION__.'] - password is empty;');
+        if (empty($this->_password)) {
+            $this->_toLog('['.__FUNCTION__.'] - password is empty');
             return false;
         }
 
         // try to connect
-        $res = $this->_connect(self::OTV_URL_AUTH, array(
-            'login' => $this->login,
-            'password' => $this->password
+        $res = $this->_sendToAPI(self::OTV_URL_AUTH, array(
+            'login' => $this->_login,
+            'password' => $this->_password
         ));
         // verify result and hash
-        if (!$res || empty($this->result->hash)) {
-            $this->_toLog('['.__FUNCTION__.'] - false authenticate;');
+        if (!$res || empty($this->_result->hash)) {
+            $this->_toLog('['.__FUNCTION__.'] - false authenticate');
             return false;
         }
 
         // assign hash
-        $this->hash = $this->result->hash;
+        $this->_hash = $this->_result->hash;
         return true;
     }
 
     /**
-     * method run curl to API
-     * @param  string $method API method
-     * @param  array $args   POST arguments
-     * @return mixed    false or object
+     * Method send ispAPI action by CURL
+     * @param   string   $method  ispAPI method
+     * @param   array    $args    POST arguments
+     * @return  object|false
      */
-    private function _connect($method, $args)
+    private function _sendToAPI($method, $args)
     {
         // verify arguments
         if (!is_string($method)) {
@@ -535,21 +545,21 @@ class OllTv
 
         // add hash to arguments
         if ($method !== self::OTV_URL_AUTH) {
-            $args['hash'] = $this->hash;
+            $args['hash'] = $this->_hash;
         }
 
         // create curl link
-        $curlLink = $this->url.'/'.$method;
+        $curlLink = $this->_url.'/'.$method;
 
         // prepare data for log
         $logArgs = $args;
-        // disable password - pass not show in logs!
+        // disable password - not show in logs!
         if (!empty($logArgs['password'])) {
             $logArgs['password'] = '*************';
         }
         // lof info
-        $this->_toLog('['.__FUNCTION__.'] - send request to url: '.$curlLink.';', 3);
-        $this->_toLog('['.__FUNCTION__.'] - send request data: '.var_export($logArgs, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send request to url: '.$curlLink, INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send request data: '.var_export($logArgs, true), INFO);
 
         // create and send curl
         $ch = curl_init();
@@ -564,82 +574,74 @@ class OllTv
         }
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // execute curl
         $response = curl_exec($ch);
         curl_close($ch);
 
         // read result
         $this->_readResult($response);
-        // run return
+        // return formed result by function _return()
         return $this->_return();
     }
 
 
     /**
-     * __construct
+     * Constructor
      * @depends _createUrl, _auth
-     * @param string  $login    client login
-     * @param string  $pass     client password
-     * @param boolean $testMode test mode flag
-     * @param string  $log      path to log file
+     * @param string   $login     client login
+     * @param string   $pass      client password
+     * @param boolean  $testMode  test mode flag
+     * @param string   $log       path to log file
      */
     public function __construct($login, $pass, $testMode = false, $log = '', $logLevel = 1)
     {
         // assign log file
-        $this->log = $log;
+        $this->_log = $log;
         // assign log level
-        $this->logLevel = ($logLevel < 0 || $logLevel > 3) ? 1 : (int)$logLevel;
+        $logLevel = (int)$logLevel;
+        $this->_logLevel = ($logLevel < 0 || $logLevel > 3) ? 1 : $logLevel;
 
         // assign login and password
-        $this->login = $login;
-        $this->password = $pass;
-        // create api url
+        $this->_login = $login;
+        $this->_password = $pass;
+
+        // create API url
         $this->_createUrl($testMode);
-        // try connect
+        // try authenticate
         $this->_auth();
     }
 
     /**
-     * magic method __call
-     * commented for better times
-     *
-     * @depends _connect
-     * @param  string $method class method
-     * @param  array $args   function arguments
-     * @return mixed
-     */
-    // public function __call($method, $args = array())
-    // {
-    //     return $this->_connect($method, $args);
-    // }
-
-    /**
-     * method return last message
-     * @param  integer $type message type
-     * @return mixed        false | string
+     * Return last message
+     * @param   integer  $type message type, default - 1 mean Error
+     * @return  string|false
      */
     public function getLastMessage($type = 1)
     {
         // verify arguments
-        if (!is_numeric($type) || !isset($this->lastMessage[ $type ])) return false;
+        if (!is_numeric($type) || !isset($this->_lastMessage[ $type ])) {
+            return false;
+        }
         // return message
-        return $this->lastMessage[ $type ];
+        return $this->_lastMessage[ $type ];
     }
 
 
-    /* API functions */
+    /* ispAPI functions */
 
     /* users functions */
 
     /**
-     * method verify email
-     * @param  string $email user email
-     * @return mixed    false - smth is wrong; 0 - not exist; 1 - exist
+     * Verify user email
+     * @param   string   $email   user email
+     * @return  integer|false    false - smth is wrong; 0 - not exist; 1 - exist
      */
     public function emailExists($email)
     {
         // verify argument
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address;');
+            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address');
             return false;
         }
         // prepare arguments array
@@ -647,28 +649,27 @@ class OllTv
             'email' => $email
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
-        // verify and return
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
+        // verify and return result
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method return account object
-     * @param  string $account user account in provider base
-     * @return mixed          return object - user account or 0
+     * Return account object
+     * @param   string  $account  user account in provider base
+     * @return  mixed             return object - user account or 0
      */
     public function accountExists($account)
     {
         // verify argument
         if (empty($account)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$account` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$account` is empty');
             return 0;
         }
         // prepare arguments array
@@ -676,20 +677,19 @@ class OllTv
             'account' => $account
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return 0;
         }
     }
 
     /**
-     * method add new user
+     * Add new user
      * @param string $email     user email
      * @param string $account   user account in provider base
      * @param array  $addParams additional params
@@ -704,18 +704,18 @@ class OllTv
      * send_registration_email (whether send the user a registration message, value 1 or 0, default: 1)
      * index (zip code or other identifier binding regional subscriber)
      *
-     * @return  mixed  false - smth is wrong; string - user ID
+     * @return  string|false   string - user ID; false - smth is wrong
      */
     public function addUser($email, $account, $addParams = array())
     {
         // verify arguments
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address;');
+            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address');
             return false;
         }
         // verify argument
         if (empty($account)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$account` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$account` is empty');
             return false;
         }
 
@@ -747,9 +747,8 @@ class OllTv
         // prepare password
         if (!empty($addParams['password']) && strlen($addParams['password']) >= 8) {
             $args['password'] = $addParams['password'];
-        }
-        else {
-            $this->_toLog('['.__FUNCTION__.'] - user password is empty or shorter than 8 chars; generate automatic;', 2);
+        } else {
+            $this->_toLog('['.__FUNCTION__.'] - user password is empty or shorter than 8 chars; generate automatic', WARNING);
         }
 
         // prepare phone
@@ -776,35 +775,34 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return 0;
         }
     }
 
     /**
-     * method return user list bound to provider
-     * @param  integer $offset offset
-     * @param  integer $limit  limit
-     * @return array
+     * Return user list bound to provider
+     * @param   integer  $offset  offset
+     * @param   integer  $limit   limit
+     * @return  array
      */
     public function getUserList($offset = 0, $limit = 1000)
     {
         // verify arguments
         if (!is_numeric($offset) || $offset < 0) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0;', 2);
+            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0', WARNING);
             $offset = 0;
         }
         if (!is_numeric($limit) || $limit <= 0 || $limit > 1000) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000;', 2);
+            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000', WARNING);
             $limit = 1000;
         }
         // prepare arguments array
@@ -813,56 +811,55 @@ class OllTv
             'limit' => $limit
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return array();
         }
     }
 
     /**
-     * method set provider account and bind user to account
-     * @param  string $email   user email
-     * @param  string $account account
-     * @return mixed          false or integer - status
+     * Assign provider account and bind user to account
+     * @param   string  $email    user email
+     * @param   string  $account  account
+     * @return  integer|false     integer - status
      */
     public function changeAccount($email, $account)
     {
         // verify arguments
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address;');
+            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address');
             return false;
         }
         // verify argument
         if (empty($account)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$account` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$account` is empty');
             return false;
         }
+
         // prepare arguments array
         $args = array(
             'email' => $email,
             'account' => $account,
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->status)) {
             return $res->status;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method unbind user from provider by params
+     * Unbind user from provider by params
      * @param  array $params
      * accept parametters:
      * account OR email OR id OR ds_account
@@ -872,13 +869,13 @@ class OllTv
      * array('id' => 42)
      * array('ds_account' => 'test')
      *
-     * @return mixed          false or integer - status
+     * @return integer|false       integer - status
      */
     public function deleteAccount($params)
     {
         // verify parametters
         if (empty($params)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty');
             return false;
         }
 
@@ -886,59 +883,60 @@ class OllTv
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
+
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->status)) {
             return $res->status;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * change user email
-     * @param  string $email    current user email
-     * @param  string $newEmail new user email
-     * @return mixed           false or integer - status
+     * Change user email
+     * @param   string  $email     current user email
+     * @param   string  $newEmail  new user email
+     * @return  integer|false      integer - status
      */
     public function changeEmail($email, $newEmail)
     {
         // verify arguments
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address;');
+            $this->_toLog('['.__FUNCTION__.'] - `$email` is not valid email address');
             return false;
         }
         if (empty($newEmail) || !filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$newEmail` is not valid email address;');
+            $this->_toLog('['.__FUNCTION__.'] - `$newEmail` is not valid email address');
             return false;
         }
+
         // prepare arguments array
         $args = array(
             'email' => $email,
             'new_email' => $newEmail
         );
+
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->status)) {
             return $res->status;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method return user information
+     * Return user information
      * @param array $params
      * accept parametters:
      * account OR email OR id OR ds_account
@@ -948,13 +946,13 @@ class OllTv
      * array('id' => 42)
      * array('ds_account' => 'test')
      *
-     * @return mixed     false or object
+     * @return object|false
      */
     public function getUserInfo($params)
     {
         // verify parametters
         if (empty($params)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty');
             return false;
         }
 
@@ -962,24 +960,24 @@ class OllTv
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
+
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method return user information
+     * Return user information
      * @param array $params parametters array
      * accept parametters:
      *
@@ -1001,22 +999,22 @@ class OllTv
      * region
      * index (zip code or other identifier binding regional subscriber)
      *
-     * @return mixed   false or integer - status
+     * @return integer|false    integer - status
      */
     public function changeUserInfo($params)
     {
         // verify parametters
         if (empty($params)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty');
             return false;
         }
 
         // prepare arguments array
-        // require parametters
+        // required parametters
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
 
@@ -1062,20 +1060,19 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method reset parent control
+     * Reset parent control
      * @param array $params
      * accept parametters:
      * account OR email OR id OR ds_account
@@ -1085,13 +1082,13 @@ class OllTv
      * array('id' => 42)
      * array('ds_account' => 'test')
      *
-     * @return mixed         false or integer - status
+     * @return integer|false       false or integer - status
      */
     public function resetParentControl($params)
     {
         // verify parametters
         if (empty($params)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty');
             return false;
         }
 
@@ -1099,30 +1096,30 @@ class OllTv
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
+
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->status)) {
             return $res->status;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
-    /* -end users functions */
+    /* --end users functions */
 
 
     /* purchases functions */
 
     /**
-     * method enable bundle
-     * @param array $params
+     * Enable bundle
+     * @param  array $params
      * accept parametters:
      * account OR email OR id OR ds_account
      * examples:
@@ -1140,13 +1137,13 @@ class OllTv
      * subs_no_device — new contract - no equipment
      * subs_renew — restore the current contract
      *
-     * @return mixed       false or integer
+     * @return integer|false
      */
     public function enableBundle($params, $subId, $type)
     {
         // verify arguments
         if (empty($params)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty');
             return false;
         }
         if (empty($subId)) {
@@ -1162,7 +1159,7 @@ class OllTv
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
 
@@ -1173,28 +1170,27 @@ class OllTv
         $type = $this->_preparePurchaseType($type);
         // verify type
         if (!$type) {
-            $this->_toLog('['.__FUNCTION__.'] - `$type` is not correct;');
+            $this->_toLog('['.__FUNCTION__.'] - `$type` is not correct');
             return false;
         }
         // assign type
         $args['type'] = $type;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method disable bundle
-     * @param array $params
+     * Disable bundle
+     * @param  array $params
      * accept parametters:
      * account OR email OR id OR ds_account
      * examples:
@@ -1212,7 +1208,7 @@ class OllTv
      * subs_no_device — new contract - no equipment
      * subs_renew — restore the current contract
      *
-     * @return mixed      false or integer
+     * @return integer|false
      */
     public function disableBundle($params, $subId, $type)
     {
@@ -1234,7 +1230,7 @@ class OllTv
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
 
@@ -1245,28 +1241,27 @@ class OllTv
         $type = $this->_preparePurchaseType($type);
         // verify type
         if (!$type) {
-            $this->_toLog('['.__FUNCTION__.'] - `$type` is not correct;');
+            $this->_toLog('['.__FUNCTION__.'] - `$type` is not correct');
             return false;
         }
         // assign type
         $args['type'] = $type;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method check user bundle
-     * @param array $params
+     * Check user bundle
+     * @param  array $params
      * accept parametters:
      * account OR email OR id OR ds_account
      * examples:
@@ -1275,15 +1270,15 @@ class OllTv
      * array('id' => 42)
      * array('ds_account' => 'test')
      *
-     * @param string $subId description
+     * @param  string $subId description
      *
-     * @return mixed     false or integer
+     * @return integer|false
      */
     public function checkBundle($params, $subId)
     {
         // verify parametters
         if (empty($params)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty');
             return false;
         }
         if (empty($subId)) {
@@ -1295,7 +1290,7 @@ class OllTv
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
 
@@ -1303,21 +1298,20 @@ class OllTv
         $args['sub_id'] = $subId;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method change use bundle-subscription
-     * @param  array $params   account params array
+     * Change use bundle-subscription
+     * @param  array  $params   account params array
      * accept parametters:
      * account OR email OR id OR ds_account
      * examples:
@@ -1326,15 +1320,15 @@ class OllTv
      * array('id' => 42)
      * array('ds_account' => 'test')
      *
-     * @param  string $oldSubId old subscription
-     * @param  string $newSubId new subscription
-     * @return mixed         false or integer - status
+     * @param  string  $oldSubId old subscription
+     * @param  string  $newSubId new subscription
+     * @return integer|false         false or integer - status
      */
     public function changeBundle($params, $oldSubId, $newSubId)
     {
         // verify parametters
         if (empty($params)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty;');
+            $this->_toLog('['.__FUNCTION__.'] - `$params` is empty');
             return false;
         }
         if (empty($oldSubId)) {
@@ -1350,7 +1344,7 @@ class OllTv
         $args = $this->_prepareAccountDefaultData($params);
         // verify arguments
         if (empty($args)) {
-            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`;');
+            $this->_toLog('['.__FUNCTION__.'] - account parametter not found in `$params`');
             return false;
         }
 
@@ -1359,81 +1353,81 @@ class OllTv
         $args['new_sub_id'] = $newSubId;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->status)) {
             return $res->status;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * get active provider's purchases
-     * @param  string $startDate start date of reporting period
-     * @param  integer $page      page number
-     * @return mixed             false or object - data
+     * Get active provider's purchases
+     * @param  string  $startDate  start date of reporting period
+     * @param  integer $page       page number
+     * @return object|false
      */
     public function getAllPurchases($startDate, $page = 1)
     {
         // verify arguments
         if (empty($startDate) || !strtotime($startDate)) {
-            $this->_toLog('['.__FUNCTION__.'] - parametter `$startDate` is not valida date type;');
+            $this->_toLog('['.__FUNCTION__.'] - parametter `$startDate` is not valida date type');
             return false;
         }
         if (!is_numeric($page) || $page <= 0) {
-            $this->_toLog('['.__FUNCTION__.'] - `$page` is not numeric os less than 0;');
+            $this->_toLog('['.__FUNCTION__.'] - `$page` is not numeric os less than 0');
             return false;
         }
+
         // prepare arguments
         $args = array(
             'start_date' => $startDate,
             'page' => $page
         );
+
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
-    /* -end purchases functions */
+    /* --end purchases functions */
 
 
     /* devices functions */
 
     /**
-     * method add device and bind to user
+     * Add device and bind to user
      * $account is required
      * $serialNumber or $mac is required, but advisable required TWO
      * $binding_code is required for providers that work with purchases for access to additional devices
      * $addParams may assigns 'device_type', 'device_model', 'type'
      *
-     * @param string $account       user account
-     * @param string $serialNumber  device serial number
-     * @param string $mac           mac address
-     * @param string $binding_code  code for binding
-     * @param array  $addParams     additional params
-     * @return  mixed     false or integer - status
+     * @param   string  $account        user account
+     * @param   string  $serialNumber   device serial number
+     * @param   string  $mac            mac address
+     * @param   string  $binding_code   code for binding
+     * @param   array   $addParams      additional params
+     * @return  integer|false           false or integer - status
      */
     public function addDevice($account, $serialNumber = null, $mac = null, $binding_code = null, $addParams = array())
     {
         // verify arguments
         if (empty($account)) {
-            $this->_toLog('['.__FUNCTION__.'] - `$account` not set;');
+            $this->_toLog('['.__FUNCTION__.'] - `$account` not set');
             return false;
         }
         if (empty($serialNumber) && empty($mac)) {
-            $this->_toLog('['.__FUNCTION__.'] - must set `$serialNumber` or `$mac` or both;');
+            $this->_toLog('['.__FUNCTION__.'] - must set `$serialNumber` or `$mac` or both');
             return false;
         }
 
@@ -1465,37 +1459,36 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->status)) {
             return $res->status;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method unbind device from user
+     * Unbind device from user
      * $serialNumber or $mac is required, but advisable required TWO
      * $account is NOT required
      * $type may assigns:
      * device_break_contract - end of contract
      * device_change - equipment problem
      *
-     * @param  string $serialNumber device serial number
-     * @param  string $mac          device mac address
-     * @param  string $account      user account
-     * @param  string $type         device type
-     * @return mixed          false or result
+     * @param   string  $serialNumber  device serial number
+     * @param   string  $mac           device mac address
+     * @param   string  $account       user account
+     * @param   string  $type          device type
+     * @return  mixed                  false or result
      */
     public function delDevice($serialNumber = null, $mac = null, $account = null, $type = null)
     {
         // verify arguments
         if (empty($serialNumber) && empty($mac)) {
-            $this->_toLog('['.__FUNCTION__.'] - must set `$serialNumber` or `$mac` or both;');
+            $this->_toLog('['.__FUNCTION__.'] - must set `$serialNumber` or `$mac` or both');
             return false;
         }
 
@@ -1516,31 +1509,30 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->status)) {
             return $res->status;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method check device
+     * Check device
      * $serialNumber or $mac is required, but advisable required TWO
      *
-     * @param  string $serialNumber device serial number
-     * @param  string $mac          device mac address
-     * @return mixed           false or 0 or object
+     * @param   string  $serialNumber  device serial number
+     * @param   string  $mac           device mac address
+     * @return  mixed                  false or 0 or object
      */
     public function deviceExists($serialNumber = null, $mac = null)
     {
         // verify arguments
         if (empty($serialNumber) && empty($mac)) {
-            $this->_toLog('['.__FUNCTION__.'] - must set `$serialNumber` or `$mac` or both;');
+            $this->_toLog('['.__FUNCTION__.'] - must set `$serialNumber` or `$mac` or both');
             return false;
         }
 
@@ -1555,37 +1547,36 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
-     * method return device list
-     * @param  string  $account user account
-     * @param  string  $email   user email
-     * @param  integer $offset  offset parametter
-     * @param  integer $limit   limit parametter no more than 1000
-     * @return mixed         false or array
+     * Return device list
+     * @param   string   $account  user account
+     * @param   string   $email    user email
+     * @param   integer  $offset   offset parametter
+     * @param   integer  $limit    limit parametter no more than 1000
+     * @return  array|false
      */
     public function getDeviceList($account = null, $email = null, $offset = 0, $limit = 1000)
     {
         // verify arguments
         if (!is_numeric($offset) || $offset < 0) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0;', 2);
+            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0', WARNING);
             $offset = 0;
         }
         if (!is_numeric($limit) || $limit <= 0 || $limit > 1000) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000;', 2);
+            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000', WARNING);
             $limit = 1000;
         }
 
@@ -1603,20 +1594,19 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true).';', 3);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
         // run request to API and get result
-        $res = $this->_connect(__FUNCTION__, $args);
+        $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
         if (isset($res->data)) {
             return $res->data;
-        }
-        else {
+        } else {
             return false;
         }
     }
 
-    /* -end devices functions */
+    /* --end devices functions */
 
-    /* -end API functions */
+    /* --end API functions */
 
 } // end class

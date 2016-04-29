@@ -3,14 +3,16 @@
 require_once __DIR__.'/vendor/autoload.php';
 require_once __DIR__.'/../class/class.OllTv.php';
 
-
+/**
+ * Oll.tv API test class
+ */
 class OllTvTest extends PHPUnit_Framework_TestCase
 {
     /**
      * OllTv class var
      * @var OllTv
      */
-    private $class;
+    private $_class;
 
     /**
      * construct alias function
@@ -20,13 +22,13 @@ class OllTvTest extends PHPUnit_Framework_TestCase
     {
         require __DIR__.'/config.php';
         // assign ollTv class to var
-        $this->class = new OllTv($config['login'], $config['pass'], $config['test'], $config['log'], $config['log_level']);
+        $this->_class = new OllTv($config['login'], $config['pass'], $config['test'], $config['log'], $config['log_level']);
     }
 
     public function tearDown()
     {
         // unset class var
-        $this->class = null;
+        $this->_class = null;
     }
 
     /* test functions */
@@ -34,26 +36,26 @@ class OllTvTest extends PHPUnit_Framework_TestCase
     public function testEmailExists()
     {
         // test some random email
-        $result = $this->class->emailExists('test'.rand(555, 666).'@test.com');
+        $result = $this->_class->emailExists('test'.rand(555, 666).'@test.com');
         $this->assertEquals($result, 0);
 
         // get first user info
-        $result = $this->class->getUserList(0, 1);
+        $result = $this->_class->getUserList(0, 1);
         if (!empty($result) && isset($result[0]->email)) {
-            $this->assertEquals( $this->class->emailExists($result[0]->email), 1 );
+            $this->assertEquals( $this->_class->emailExists($result[0]->email), 1 );
         }
     }
 
     public function testAccountExists()
     {
         // test some random account
-        $result = $this->class->accountExists('test'.rand(555, 666));
+        $result = $this->_class->accountExists('test'.rand(555, 666));
         $this->assertEquals($result, 0);
 
         // get first user info
-        $result = $this->class->getUserList(0, 1);
+        $result = $this->_class->getUserList(0, 1);
         if (!empty($result) && isset($result[0]->account)) {
-            $this->assertInternalType('object', $this->class->accountExists($result[0]->account) );
+            $this->assertInternalType('object', $this->_class->accountExists($result[0]->account) );
         }
     }
 
@@ -74,7 +76,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'send_registration_email' => 1,
             'index' => '35600'
         );
-        $this->assertFalse( $this->class->addUser($user['email'], $user['account'], $user) );
+        $this->assertFalse( $this->_class->addUser($user['email'], $user['account'], $user) );
 
         // add user with true data
         // prepare tester account
@@ -92,14 +94,13 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'send_registration_email' => 1,
             'index' => '35600'
         );
-        $this->assertInternalType('string', $this->class->addUser($email, $account, $user) );
+        $this->assertInternalType('string', $this->_class->addUser($email, $account, $user) );
     }
-
 
     public function testGetUserList()
     {
         // get user list
-        $this->assertInternalType('array', $this->class->getUserList(0, 2) );
+        $this->assertInternalType('array', $this->_class->getUserList(0, 2) );
     }
 
     public function testChangeAccount()
@@ -107,7 +108,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
         // try change some random account
         $account = 'testers'.substr(md5(date('Y-m-d H:i:s')), 0, 6);
         $email = $account.'@test.com';
-        $this->assertEquals($this->class->changeAccount($email, $account), 0);
+        $this->assertEquals($this->_class->changeAccount($email, $account), 0);
     }
 
     public function testDeleteAccount()
@@ -119,7 +120,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'account' => $account,
             'email' => $email
         );
-        $this->assertEquals($this->class->deleteAccount($data), 0);
+        $this->assertEquals($this->_class->deleteAccount($data), 0);
     }
 
     public function testChangeEmail()
@@ -127,7 +128,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
         // try change some random email
         $email = 'testers'.substr(md5(date('Y-m-d H:i:s')), 0, 6).'@test.com';
         $newEmail = 'testers'.substr(md5(date('Y-m-d H:i:s')), 0, 6).'@test.com';
-        $this->assertEquals($this->class->changeEmail($email, $newEmail), 0);
+        $this->assertEquals($this->_class->changeEmail($email, $newEmail), 0);
     }
 
     public function testGetUserInfo()
@@ -136,15 +137,15 @@ class OllTvTest extends PHPUnit_Framework_TestCase
         $account = array(
             'email' => 'testers'.substr(md5(date('Y-m-d H:i:s')), 0, 6).'@test.com'
         );
-        $this->assertEquals($this->class->getUserInfo($account), 0);
+        $this->assertEquals($this->_class->getUserInfo($account), 0);
 
         // get first user info
-        $result = $this->class->getUserList(0, 1);
+        $result = $this->_class->getUserList(0, 1);
         if (!empty($result) && isset($result[0]->account)) {
             $account = array(
                 'account' => $result[0]->account
             );
-            $this->assertInternalType('object', $this->class->getUserInfo($account) );
+            $this->assertInternalType('object', $this->_class->getUserInfo($account) );
         }
     }
 
@@ -167,17 +168,17 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'send_registration_email' => 1,
             'index' => '35600'
         );
-        $this->assertEquals($this->class->changeUserInfo($user), 0);
+        $this->assertEquals($this->_class->changeUserInfo($user), 0);
 
         // try change existing user info
-        $result = $this->class->getUserList(0, 1);
+        $result = $this->_class->getUserList(0, 1);
         if (!empty($result) && isset($result[0]->account) && isset($result[0]->email)) {
             $user = array(
                 'account' => $result[0]->account,
                 'email' => $result[0]->email,
                 'firstname' => 'Tester'
             );
-            $this->assertEquals($this->class->changeUserInfo($user), 1);
+            $this->assertEquals($this->_class->changeUserInfo($user), 1);
         }
     }
 
@@ -187,7 +188,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
         $account = array(
             'email' => 'testers'.substr(md5(date('Y-m-d H:i:s')), 0, 6).'@test.com'
         );
-        $this->assertEquals($this->class->resetParentControl($account), 0);
+        $this->assertEquals($this->_class->resetParentControl($account), 0);
     }
 
     public function testEnableBundle()
@@ -198,7 +199,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'sub_id' => 'test-bundle',
             'type' => 'subs_free_device'
         );
-        $res = $this->class->enableBundle($data, $data['sub_id'], $data['type']);
+        $res = $this->_class->enableBundle($data, $data['sub_id'], $data['type']);
         $this->assertEquals($res, 0);
     }
 
@@ -210,7 +211,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'sub_id' => 'test-bundle',
             'type' => 'subs_free_device'
         );
-        $res = $this->class->disableBundle($data, $data['sub_id'], $data['type']);
+        $res = $this->_class->disableBundle($data, $data['sub_id'], $data['type']);
         $this->assertEquals($res, 0);
     }
 
@@ -221,7 +222,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'email' => 'testers'.substr(md5(date('Y-m-d H:i:s')), 0, 6).'@test.com',
             'sub_id' => 'test-bundle',
         );
-        $res = $this->class->checkBundle($data, $data['sub_id']);
+        $res = $this->_class->checkBundle($data, $data['sub_id']);
         $this->assertEquals($res, 0);
     }
 
@@ -233,7 +234,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'sub_id' => 'test-bundle',
             'new_sub_id' => 'new-test-bundle',
         );
-        $res = $this->class->changeBundle($data, $data['sub_id'], $data['new_sub_id']);
+        $res = $this->_class->changeBundle($data, $data['sub_id'], $data['new_sub_id']);
         $this->assertEquals($res, 0);
     }
 
@@ -242,7 +243,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
         // get purchases
         $startDate = date('Y-m-d');
         $page = 1;
-        $res = $this->class->getAllPurchases($startDate, $page);
+        $res = $this->_class->getAllPurchases($startDate, $page);
         $this->assertInternalType('object', $res);
     }
 
@@ -258,7 +259,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
                 'device_type' => 'ipad'
             )
         );
-        $res = $this->class->addDevice($data['account'], $data['serial_number'], $data['mac'], $data['binding_code'], $data['adds']);
+        $res = $this->_class->addDevice($data['account'], $data['serial_number'], $data['mac'], $data['binding_code'], $data['adds']);
         $this->assertEquals($res, 0);
     }
 
@@ -271,7 +272,7 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'account' => 'tester'.rand(3, 20),
             'type' => 'some-type'
         );
-        $res = $this->class->delDevice($data['serial_number'], $data['mac'], $data['account'], $data['type']);
+        $res = $this->_class->delDevice($data['serial_number'], $data['mac'], $data['account'], $data['type']);
         $this->assertFalse($res);
     }
 
@@ -282,17 +283,17 @@ class OllTvTest extends PHPUnit_Framework_TestCase
             'serial_number' => 'test-serial-number',
             'mac' => 'test-mac'
         );
-        $res = $this->class->deviceExists($data['serial_number'], $data['mac']);
+        $res = $this->_class->deviceExists($data['serial_number'], $data['mac']);
         $this->assertEquals($res, 0);
     }
 
     public function testGetDeviceList()
     {
         // get devices list
-        $res = $this->class->getDeviceList();
+        $res = $this->_class->getDeviceList();
         $this->assertInternalType('array', $res);
     }
 
-    /* -end test functions */
+    /* --end test functions */
 
 } // end class

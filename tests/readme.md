@@ -13,12 +13,18 @@ composer install
 Then prepare your config:
 
 ```php
+<?php
+
+/**
+ * Test config
+ * @var array
+ */
 $config = array(
-    'login' => 'login',
-    'pass' => 'pass',
-    'test' => true,
-    'log' => __DIR__.'/path/to/test.log',
-    'log_level' => 1
+    'login' => 'login',                   // ispAPI login
+    'pass' => 'pass',                     // ispAPI password
+    'test' => true,                       // ispAPI test mode flag
+    'log' => __DIR__.'/path/to/test.log', // log file
+    'log_level' => 1                      // log level
 );
 ```
 
