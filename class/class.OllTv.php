@@ -303,7 +303,7 @@ class OllTv
                 'account' => $params['account']
             );
         } else {
-            $this->_toLog('['.__FUNCTION__.'] - `account` not found in parametter array', INFO);
+            $this->_toLog('['.__FUNCTION__.'] - `account` not found in parametter array', self::INFO);
         }
 
         // try find 'email'
@@ -312,7 +312,7 @@ class OllTv
                 'email' => $params['email']
             );
         } else {
-            $this->_toLog('['.__FUNCTION__.'] - `email` not found in parametter array or `email` is not valid email', INFO);
+            $this->_toLog('['.__FUNCTION__.'] - `email` not found in parametter array or `email` is not valid email', self::INFO);
         }
 
         // try find 'id'
@@ -321,7 +321,7 @@ class OllTv
                 'id' => $params['id']
             );
         } else {
-            $this->_toLog('['.__FUNCTION__.'] - `id` not found in parametter array', INFO);
+            $this->_toLog('['.__FUNCTION__.'] - `id` not found in parametter array', self::INFO);
         }
 
         // try find 'ds_account'
@@ -330,7 +330,7 @@ class OllTv
                 'ds_account' => $params['ds_account']
             );
         } else {
-            $this->_toLog('['.__FUNCTION__.'] - `ds_account` not found in parametter array', INFO);
+            $this->_toLog('['.__FUNCTION__.'] - `ds_account` not found in parametter array', self::INFO);
         }
 
         return $args;
@@ -399,7 +399,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - read result: '.var_export($result, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - read result: '.var_export($result, true), self::INFO);
 
         // decode from string
         $json = json_decode($result);
@@ -460,7 +460,7 @@ class OllTv
         // all looks good
         else {
             // log action
-            $this->_toLog('['.__FUNCTION__.'] - return API result', INFO);
+            $this->_toLog('['.__FUNCTION__.'] - return API result', self::INFO);
             // return result
             return $this->_result;
         }
@@ -475,17 +475,17 @@ class OllTv
     {
         // verify argument
         if (!is_bool($testMode)) {
-            $this->_toLog('['.__FUNCTION__.'] - $testMode not is boolean type; set to default `false`', WARNING);
+            $this->_toLog('['.__FUNCTION__.'] - $testMode not is boolean type; set to default `false`', self::WARNING);
             $testMode = false;
         }
 
         // assign url
         if ($testMode) {
-            $this->_toLog('['.__FUNCTION__.'] - $testMode is `true`; set url to: '.self::OTV_URL_DEV, INFO);
+            $this->_toLog('['.__FUNCTION__.'] - $testMode is `true`; set url to: '.self::OTV_URL_DEV, self::INFO);
             $this->_url = self::OTV_URL_DEV;
         }
         else {
-            $this->_toLog('['.__FUNCTION__.'] - $testMode is `false`; set url to: '.self::OTV_URL, INFO);
+            $this->_toLog('['.__FUNCTION__.'] - $testMode is `false`; set url to: '.self::OTV_URL, self::INFO);
             $this->_url = self::OTV_URL;
         }
         // add ispAPI link to url
@@ -558,8 +558,8 @@ class OllTv
             $logArgs['password'] = '*************';
         }
         // lof info
-        $this->_toLog('['.__FUNCTION__.'] - send request to url: '.$curlLink, INFO);
-        $this->_toLog('['.__FUNCTION__.'] - send request data: '.var_export($logArgs, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send request to url: '.$curlLink, self::INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send request data: '.var_export($logArgs, true), self::INFO);
 
         // create and send curl
         $ch = curl_init();
@@ -649,7 +649,7 @@ class OllTv
             'email' => $email
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return result
@@ -677,7 +677,7 @@ class OllTv
             'account' => $account
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -748,7 +748,7 @@ class OllTv
         if (!empty($addParams['password']) && strlen($addParams['password']) >= 8) {
             $args['password'] = $addParams['password'];
         } else {
-            $this->_toLog('['.__FUNCTION__.'] - user password is empty or shorter than 8 chars; generate automatic', WARNING);
+            $this->_toLog('['.__FUNCTION__.'] - user password is empty or shorter than 8 chars; generate automatic', self::WARNING);
         }
 
         // prepare phone
@@ -775,7 +775,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -797,12 +797,12 @@ class OllTv
         // verify arguments
         if (!is_numeric($offset) || $offset < 0) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0', WARNING);
+            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0', self::WARNING);
             $offset = 0;
         }
         if (!is_numeric($limit) || $limit <= 0 || $limit > 1000) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000', WARNING);
+            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000', self::WARNING);
             $limit = 1000;
         }
         // prepare arguments array
@@ -811,7 +811,7 @@ class OllTv
             'limit' => $limit
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -847,7 +847,7 @@ class OllTv
             'account' => $account,
         );
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -888,7 +888,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -924,7 +924,7 @@ class OllTv
         );
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -965,7 +965,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1060,7 +1060,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1101,7 +1101,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1177,7 +1177,7 @@ class OllTv
         $args['type'] = $type;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1248,7 +1248,7 @@ class OllTv
         $args['type'] = $type;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1298,7 +1298,7 @@ class OllTv
         $args['sub_id'] = $subId;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1353,7 +1353,7 @@ class OllTv
         $args['new_sub_id'] = $newSubId;
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1389,7 +1389,7 @@ class OllTv
         );
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1459,7 +1459,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1509,7 +1509,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1547,7 +1547,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
@@ -1571,12 +1571,12 @@ class OllTv
         // verify arguments
         if (!is_numeric($offset) || $offset < 0) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0', WARNING);
+            $this->_toLog('['.__FUNCTION__.'] - `$offset` is incorrect, set to 0', self::WARNING);
             $offset = 0;
         }
         if (!is_numeric($limit) || $limit <= 0 || $limit > 1000) {
             // log info
-            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000', WARNING);
+            $this->_toLog('['.__FUNCTION__.'] - `$limit` is incorrect, set to default 1000', self::WARNING);
             $limit = 1000;
         }
 
@@ -1594,7 +1594,7 @@ class OllTv
         }
 
         // log info
-        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), INFO);
+        $this->_toLog('['.__FUNCTION__.'] - send params: '.var_export($args, true), self::INFO);
         // run request to API and get result
         $res = $this->_sendToAPI(__FUNCTION__, $args);
         // verify and return
